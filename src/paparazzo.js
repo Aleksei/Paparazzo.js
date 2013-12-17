@@ -104,8 +104,8 @@
         this.emit('update', this.image);
         this.data = '';
         remaining = chunk.substring(boundary_index);
-        typeMatches = remaining.match(/Content-Type:\simage\/jpeg\s+/);
-        matches = remaining.match(/Content-Length:\s(\d+)\s+/);
+        typeMatches = remaining.match(/Content-Type:\s*image\/jpeg\s*/);
+        matches = remaining.match(/Content-Length:\s*(\d+)\s*/);
         if ((matches != null) && matches.length > 1) {
           newImageBeginning = remaining.indexOf(matches[0]) + matches[0].length;
           this.imageExpectedLength = matches[1];
