@@ -25,7 +25,7 @@
           message: 'Host is not defined!'
         });
       }
-      options.port || (options.port = 80);
+      options.port || (options.port = 8051);
       options.path || (options.path = '/');
       options.headers || (options.headers = {});
       this.options = options;
@@ -45,8 +45,8 @@
         emitter.boundary = emitter.boundaryStringFromContentType(response.headers['content-type']);
         this.data = '';
         response.setEncoding('binary');
-        response.on('data', emitter.handleServerResponse);
-        return response.on('end', function() {
+        response.on('data', emitter.handleServerResponse);      
+	   return response.on('end', function() {
           return emitter.emit('error', {
             message: "Server closed connection!"
           });
@@ -65,8 +65,6 @@
       # If a boundary string is not found, it fallbacks to a default boundary.
       #
     */
-
-
     Paparazzo.prototype.boundaryStringFromContentType = function(type) {
       var boundary, match;
       match = type.match(/multipart\/x-mixed-replace;boundary=(.+)/);
@@ -93,25 +91,52 @@
       # \r\n
       #
     */
-
-
+	//var i = 0;
     Paparazzo.prototype.handleServerResponse = function(chunk) {
-      var boundary_index, matches, newImageBeginning, remaining, typeMatches;
-      boundary_index = chunk.indexOf(this.boundary);
-      if (boundary_index !== -1) {
-        this.data += chunk.substring(0, boundary_index);
-        this.image = this.data;
+		//if(i<10) console.log(chunk);
+		//i++;
+	  var boundary_index, matches, newImageBeginning, remaining, typeMatches;
+	  boundary_index = chunk.indexOf(this.boundary);
+	  if (boundary_index !== -1) {
+		//Ai-Ball
+		if(this.boundary == 'boundarydonotcross'){
+			var tt;
+			var tt2;
+			var tt3;
+			var tt4;
+			var type;
+			var size;
+			var frame;
+			var test = this.data;
+			
+			test = ''+test+'';
+			tt = test.split('jpeg');
+			type = tt[0]+'jpeg';
+			tt4 = type.split("\r\n");
+			type = ''+tt4[0]+'';
+			tt2 = ''+tt[1]+'';
+			tt3 = tt2.split("\r\n\r\n");
+			size = tt3[0];
+			//console.log(size);
+			frame = ''+tt3[1]+'';
+		}
+
+		this.data += chunk.substring(0, boundary_index);
+        if(this.boundary == 'boundarydonotcross') this.image = frame+chunk;
+		else this.image = this.data;
         this.emit('update', this.image);
         this.data = '';
-        remaining = chunk.substring(boundary_index);
-        typeMatches = remaining.match(/Content-Type:\s*image\/jpeg\s*/);
+        if(this.boundary == 'boundarydonotcross') remaining = type + size;
+		else remaining = chunk.substring(boundary_index);
+		typeMatches = remaining.match(/Content-Type:\s*image\/jpeg\s*/);
         matches = remaining.match(/Content-Length:\s*(\d+)\s*/);
         if ((matches != null) && matches.length > 1) {
           newImageBeginning = remaining.indexOf(matches[0]) + matches[0].length;
           this.imageExpectedLength = matches[1];
+		  //console.log(matches[1]);
           this.data += remaining.substring(newImageBeginning);
         } else if (typeMatches != null) {
-          newImageBeginning = remaining.indexOf(typeMatches[0]) + typeMatches[0].length;
+		  newImageBeginning = remaining.indexOf(typeMatches[0]) + typeMatches[0].length;
           this.data += remaining.substring(newImageBeginning);
         } else {
           newImageBeginning = boundary_index + this.boundary.length;
