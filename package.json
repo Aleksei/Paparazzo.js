@@ -2,7 +2,7 @@
     "name": "paparazzo",
     "author": "Rod Wilhelmy <rwilhelmy@gmail.com>",
     "description": "MJPG streaming for the masses (any browser)",
-    "version": "0.5.1",
+    "version": "0.5.2",
     "main": "./src/paparazzo",
     "repository": {
       "type": "git",
