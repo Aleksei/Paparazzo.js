@@ -111,6 +111,11 @@
 		Paparazzo.prototype.handleServerResponse = function(chunk) {
 			var boundary_index, matches, newImageBeginning, remaining, typeMatches;
 
+			if ( this.preChank ) {
+				chunk = this.preChank + chunk;
+				this.preChank = '';
+			}
+
 			boundary_index = chunk.indexOf(this.boundary);
 
 			if ( boundary_index !== -1 ) {
@@ -144,7 +149,10 @@
 				} else {
 					this.image = this.data;
 				}
-				this.emit('update', this.image);
+
+				if ( this.image.length ) {
+					this.emit('update', this.image);
+				}
 				this.data = '';
 
 				if (this.boundary == 'boundarydonotcross') {
@@ -164,7 +172,10 @@
 					newImageBeginning = remaining.indexOf(typeMatches[0]) + typeMatches[0].length;
 					this.data += remaining.substring(newImageBeginning);
 				} else {
-					newImageBeginning = boundary_index + this.boundary.length;
+					// newImageBeginning = boundary_index + this.boundary.length;
+
+					this.preChank = remaining;
+
 					this.emit('error', {
 						message: 'Could not find beginning of next image'
 					});
@@ -172,6 +183,7 @@
 			} else {
 				this.data += chunk;
 			}
+
 			if (this.data.length >= this.memory) {
 				this.data = '';
 				return this.emit('error', {
